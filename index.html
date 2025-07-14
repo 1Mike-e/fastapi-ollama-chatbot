@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FastAPI AI Chat</title>
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background: #f4f6f9;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        height: 100vh;
+      }
+
+      header {
+        background-color: #1e90ff;
+        color: white;
+        padding: 20px;
+        width: 100%;
+        text-align: center;
+        font-size: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      main {
+        flex: 1;
+        width: 100%;
+        max-width: 600px;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+
+      #chat-box {
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding: 15px;
+        height: 400px;
+        overflow-y: auto;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      }
+
+      .message {
+        margin-bottom: 10px;
+      }
+
+      .user {
+        color: #1e90ff;
+        font-weight: bold;
+      }
+
+      .bot {
+        color: #333;
+      }
+
+      #input-container {
+        display: flex;
+        gap: 10px;
+      }
+
+      input[type="text"] {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 1rem;
+      }
+
+      button {
+        padding: 10px 20px;
+        background-color: #1e90ff;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #0d6efd;
+      }
+
+      @media (max-width: 600px) {
+        main {
+          padding: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>🤖 FastAPI + Ollama Chatbot</header>
+    <main>
+      <div id="chat-box"></div>
+
+      <div id="input-container">
+        <input type="text" id="prompt" placeholder="Type your message..." />
+        <button onclick="sendPrompt()">Send</button>
+      </div>
+    </main>
+
+    <script>
+      const chatBox = document.getElementById("chat-box");
+
+      function appendMessage(content, sender) {
+        const div = document.createElement("div");
+        div.className = "message " + sender;
+        div.innerHTML = `<span class="${sender}">${
+          sender === "user" ? "You" : "AI"
+        }:</span> ${content}`;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      }
+
+      async function sendPrompt() {
+        const input = document.getElementById("prompt");
+        const prompt = input.value.trim();
+        if (!prompt) return;
+
+        appendMessage(prompt, "user");
+        input.value = "";
+
+        appendMessage("Typing...", "bot");
+
+        try {
+          const res = await fetch(
+            `/chat?prompt=${encodeURIComponent(prompt)}`,
+            {
+              method: "POST",
+            }
+          );
+          const data = await res.json();
+          // Remove "Typing..." placeholder
+          chatBox.lastChild.remove();
+          appendMessage(data.response, "bot");
+        } catch (err) {
+          chatBox.lastChild.remove();
+          appendMessage("❌ Error contacting AI server.", "bot");
+        }
+      }
+
+      // Optional: Press "Enter" to send
+      document
+        .getElementById("prompt")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") sendPrompt();
+        });
+    </script>
+  </body>
+</html>
